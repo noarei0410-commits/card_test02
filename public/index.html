@@ -30,23 +30,13 @@
                 <button onclick="showPage('hub-page')" class="btn-close-gray">閉じる</button>
             </div>
             <div class="filter-bar">
-                <button class="filter-btn active" onclick="filterLibrary('all')">すべて</button>
+                <button class="filter-btn" onclick="filterLibrary('all')">すべて</button>
                 <button class="filter-btn" onclick="filterLibrary('holomen')">ホロメン</button>
                 <button class="filter-btn" onclick="filterLibrary('support')">サポート</button>
                 <button class="filter-btn" onclick="filterLibrary('ayle')">エール</button>
                 <button class="filter-btn" onclick="filterLibrary('oshi')">推し</button>
             </div>
             <div id="global-card-grid" class="card-grid"></div>
-        </div>
-    </div>
-
-    <div id="archive-modal" class="full-page" style="display: none;">
-        <div class="modal-content list-content">
-            <div class="modal-header">
-                <h2>Archive List</h2>
-                <button onclick="closeArchive()" class="btn-close-gray">閉じる</button>
-            </div>
-            <div id="archive-card-grid" class="card-grid"></div>
         </div>
     </div>
 
@@ -81,15 +71,33 @@
         </div>
     </div>
 
-    <div id="zoom-modal" style="display: none;">
-        <div class="zoom-container">
-            <div id="zoom-card-display" class="card"></div>
-            <p class="zoom-hint">タップして閉じる</p>
+    <div id="deck-inspection-modal" class="full-page" style="display: none;">
+        <div class="modal-content list-content">
+            <div class="modal-header">
+                <h2 id="inspection-title">List</h2>
+                <button onclick="closeDeckInspection()" class="btn-close-gray">閉じる</button>
+            </div>
+            <div id="deck-card-grid" class="card-grid"></div>
         </div>
     </div>
 
+    <div id="archive-modal" class="full-page" style="display: none;">
+        <div class="modal-content list-content">
+            <div class="modal-header">
+                <h2>Archive List</h2>
+                <button onclick="closeArchive()" class="btn-close-gray">閉じる</button>
+            </div>
+            <div id="archive-card-grid" class="card-grid"></div>
+        </div>
+    </div>
+
+    <div id="zoom-modal" style="display: none;">
+        <div class="zoom-container"></div>
+        <p class="zoom-hint-outside">タップして閉じる</p>
+    </div>
+
     <div id="ui-layer">
-        <span id="status">Hub</span>
+        <span id="status">Room: ---</span>
         <span>M:<span id="mainCount">0</span> C:<span id="cheerCount">0</span></span>
     </div>
 
@@ -97,15 +105,14 @@
         <div id="field">
             <div class="column side-column">
                 <div class="zone life-zone" id="life-zone"><span>ライフ</span></div>
-                <div class="zone deck-zone" id="cheer-deck-zone"><span>エール<br>デッキ</span></div>
+                <div class="zone deck-zone clickable-zone" id="cheer-deck-zone"><span>エール<br>デッキ</span></div>
             </div>
-
             <div class="column center-column">
                 <div class="stage-label-bar">ステージ</div>
                 <div class="stage-top-row">
-                    <div class="zone" id="collab"><span>コラボ<br>ポジション</span></div>
-                    <div class="zone" id="center"><span>センター<br>ポジション</span></div>
-                    <div class="zone" id="oshi"><span>推し<br>ポジション</span></div>
+                    <div class="zone" id="collab"><span>コラボ</span></div>
+                    <div class="zone" id="center"><span>センター</span></div>
+                    <div class="zone" id="oshi"><span>推し</span></div>
                 </div>
                 <div class="stage-bottom-row">
                     <div class="back-position-container">
@@ -114,17 +121,12 @@
                         <div class="zone back-slot" id="back3"><span>B3</span></div>
                         <div class="zone back-slot" id="back4"><span>B4</span></div>
                         <div class="zone back-slot" id="back5"><span>B5</span></div>
-                        <div class="back-label">バックポジション</div>
                     </div>
                 </div>
-                <div class="turn-guide-box">
-                    <span>1.リセット 2.手札 3.エール 4.メイン 5.パフォーマンス 6.エンド</span>
                 </div>
-            </div>
-
             <div class="column side-column">
                 <div class="zone" id="holopower"><span>ホロパワー</span></div>
-                <div class="zone deck-zone" id="main-deck-zone"><span>メイン<br>デッキ</span></div>
+                <div class="zone deck-zone clickable-zone" id="main-deck-zone"><span>メイン<br>デッキ</span></div>
                 <div class="zone clickable-zone" id="archive" onclick="openArchive()"><span>アーカイブ<br>(確認)</span></div>
             </div>
         </div>
