@@ -53,16 +53,6 @@ body {
 
 .card-grid { display: flex; flex-wrap: wrap; gap: 15px; padding: 10px; justify-content: flex-start; align-content: flex-start; }
 
-/* デッキ/アーカイブ確認用グリッド */
-#deck-card-grid .card {
-    position: relative !important;
-    left: auto !important;
-    top: auto !important;
-    transform: none !important; /* 強制的に縦向き */
-    flex-shrink: 0;
-    cursor: pointer;
-}
-
 /* --- フィールド UI --- */
 #ui-layer { width: 100%; padding: 5px 15px; display: flex; justify-content: space-between; font-size: 10px; height: 25px; align-items: center; color: rgba(240, 255, 255, 0.8); }
 #field-container { width: 98vw; height: 60vh; max-height: 550px; border: 3px double #f0ffff; border-radius: 12px; background: rgba(255,255,255,0.02); padding: 6px; margin-top: 5px; }
@@ -121,7 +111,7 @@ body {
 .card.rotated { transform: rotate(90deg); }
 
 /* ==========================================
-   3. 詳細表示 (Zoom Modal)
+   3. 詳細表示 (Zoom Modal) & HPカウンター
    ========================================== */
 #zoom-modal {
     position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
@@ -136,6 +126,7 @@ body {
 .zoom-header { display: flex; justify-content: space-between; border-bottom: 2px solid #eee; padding-bottom: 8px; align-items: center; }
 .zoom-name { font-size: 20px; font-weight: bold; }
 
+/* HP管理セクション */
 .zoom-hp-area { display: flex; align-items: center; gap: 10px; }
 .zoom-hp { font-size: 20px; color: #e74c3c; font-weight: bold; }
 .hp-control-btns { display: flex; gap: 5px; }
@@ -164,9 +155,6 @@ body {
 .skill-name-row { display: flex; flex: 1; justify-content: space-between; align-items: center; font-weight: bold; font-size: 14px; }
 .skill-damage { color: #e74c3c; font-size: 16px; margin-left: 10px; }
 
-.btn-activate-skill { background: #f1c40f; color: #000; border: none; padding: 4px 10px; border-radius: 12px; font-size: 10px; font-weight: bold; cursor: pointer; margin-left: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-.btn-activate-skill:active { transform: translateY(1px); box-shadow: none; }
-
 .cost-container { display: flex; gap: 2px; }
 .cost-icon { width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.1); }
 .skill-cost-hp { font-size: 11px; font-weight: bold; color: #e67e22; }
@@ -175,7 +163,6 @@ body {
 .zoom-attach-section { background: #f0f7ff; border-radius: 10px; padding: 8px; border: 1px solid #d0e4ff; margin-bottom: 5px; }
 .attach-title { font-size: 10px; font-weight: bold; color: #2980b9; margin-bottom: 5px; display: block; border-bottom: 1px solid #d0e4ff; }
 .attach-item { font-size: 12px; padding: 4px 0; border-bottom: 1px dashed #d0e4ff; margin-bottom: 4px; }
-.attach-item:last-child { border-bottom: none; }
 .attach-item-header { display: flex; justify-content: space-between; align-items: center; font-weight: bold; margin-bottom: 2px; }
 .attach-item-text { font-size: 10px; color: #555; font-style: italic; line-height: 1.3; }
 .btn-discard-small { background: #ff5e5e; color: white; border: none; font-size: 8px; padding: 2px 5px; border-radius: 4px; cursor: pointer; }
