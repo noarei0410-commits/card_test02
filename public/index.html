@@ -13,14 +13,13 @@
 </head>
 <body>
 
-    <div id="hub-page" class="full-page" style="display: flex;"> <div class="hub-container">
+    <div id="hub-page" class="full-page" style="display: flex;"> 
+        <div class="hub-container">
             <h1 class="hub-title">hOCG Simulator</h1>
-            
             <div class="room-list-container">
                 <span class="section-label">稼働中のルーム</span>
                 <div id="roomList" class="room-list"></div>
             </div>
-
             <div class="hub-form-container">
                 <span class="section-label">ルームへ入る</span>
                 <input type="text" id="roomIdInput" placeholder="ルームIDを入力 または リストを選択">
@@ -29,7 +28,6 @@
                     <button id="joinSpectatorBtn" class="hub-btn spectator-btn">👁️ 観戦する</button>
                 </div>
             </div>
-
             <div class="hub-extra-container">
                 <button class="btn-library-item" onclick="showPage('card-list-page')">📚 カードライブラリを確認する</button>
             </div>
@@ -49,7 +47,6 @@
                     <input type="text" id="searchInput" placeholder="カード名で検索..." oninput="updateLibrary()">
                     <div id="libraryList"></div>
                 </div>
-
                 <div class="deck-lists-container">
                     <div class="deck-section">
                         <div class="section-header">推しホロメン</div>
@@ -65,7 +62,6 @@
                     </div>
                 </div>
             </div>
-
             <div class="builder-footer">
                 <button id="startGameBtn" disabled>対戦開始</button>
                 <button onclick="location.reload()" class="btn-cancel">戻る</button>
@@ -75,9 +71,7 @@
 
     <div id="ui-layer">
         <div id="room-info">Room: -</div>
-        <div class="deck-counts">
-            Main: <span id="mainCount">0</span> | Cheer: <span id="cheerCount">0</span>
-        </div>
+        <div class="deck-counts">Main: <span id="mainCount">0</span> | Cheer: <span id="cheerCount">0</span></div>
         <button onclick="openArchive()" class="btn-archive">Archive</button>
     </div>
 
@@ -111,9 +105,7 @@
         </div>
     </div>
 
-    <div id="hand-container">
-        <div id="hand"></div>
-    </div>
+    <div id="hand-container"><div id="hand"></div></div>
 
     <div id="zoom-modal">
         <div id="zoom-outer" class="zoom-outer-container">
