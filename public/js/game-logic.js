@@ -1,24 +1,20 @@
 /**
  * カードDOMの生成
- * 各種カードタイプに応じた要素を構築します。
  */
 function createCardElement(data, withEvents = true) {
     if (!data) return document.createElement('div');
     const el = document.createElement('div'); el.id = data.id || ""; el.className = 'card';
     
-    // 種別クラスの付与
     if (data.type === 'oshi') el.classList.add('oshi-card');
     if (data.type === 'ayle') el.classList.add('ayle-card');
     if (data.type === 'support') el.classList.add('support-card');
 
-    // 属性色の適用
     if (data.type !== 'support') {
         const colorVal = data.color || (data.type === 'ayle' ? data.name.charAt(0) : null);
         const colorKey = COLORS[colorVal] || 'white';
         el.classList.add('border-' + colorKey);
     }
 
-    // 内部表示の分岐
     if (data.type === 'ayle') {
         const centerIcon = document.createElement('div');
         centerIcon.className = 'ayle-center-icon';
@@ -28,7 +24,6 @@ function createCardElement(data, withEvents = true) {
         const nameSpan = document.createElement('span');
         nameSpan.innerText = data.name || ""; 
         el.appendChild(nameSpan);
-
         if (data.type === 'support' && data.category) {
             const catDiv = document.createElement('div');
             catDiv.className = 'card-support-category-initial';
@@ -45,7 +40,6 @@ function createCardElement(data, withEvents = true) {
         const hpDiv = document.createElement('div'); 
         hpDiv.className = 'card-hp'; hpDiv.id = `hp-display-${data.id}`;
         hpDiv.innerText = currentHp || ""; el.appendChild(hpDiv);
-
         if (data.bloom) {
             const bl = document.createElement('div'); bl.className = 'card-bloom'; 
             bl.innerText = data.bloom.charAt(0); el.appendChild(bl);
@@ -73,7 +67,6 @@ function createCardElement(data, withEvents = true) {
 
 /**
  * 拡大表示 (ズーム)
- * 背景クリックで閉じる機能を搭載
  */
 function openZoom(cardData, cardElement = null) {
     if (!cardData || (cardElement && cardElement.classList.contains('face-down') && cardElement.dataset.zoneId === 'life-zone')) return;
@@ -86,7 +79,6 @@ function openZoom(cardData, cardElement = null) {
     const colorCode = COLORS[cardData.color] || (cardData.type === 'ayle' ? COLORS[cardData.name.charAt(0)] : 'white');
     zoomOuter.classList.add('border-' + (COLORS[cardData.color] || 'white'));
 
-    // --- 各カードタイプに応じた専用レイアウトの生成 ---
     if (cardData.type === 'support') {
         zoomOuter.classList.add('support-zoom');
         const limitedHtml = cardData.limited ? `<div class="zoom-support-limited-bar">LIMITED：ターンに1枚しか使えない。</div>` : "";
@@ -128,12 +120,10 @@ function openZoom(cardData, cardElement = null) {
                 </div>
             </div>`;
     } else {
-        // 通常ホロメン (3カラムスキルレイアウト)
         const skillsHtml = (cardData.skills || []).map(s => `
             <div class="skill-box">
                 <div class="skill-top-row">
-                    <div class="skill-label-container">${s.type === 'gift' ? '<div class="effect-label label-gift">G</div>' : ''}</div>
-                    <div class="skill-name-container-center"><span class="skill-name-text">${s.name}</span></div>
+                    <div class="skill-name-text">${s.name}</div>
                     <div class="skill-damage-text">${s.damage || ""}</div>
                 </div>
                 <div class="skill-text-detail">${s.text}</div>
@@ -143,47 +133,38 @@ function openZoom(cardData, cardElement = null) {
             <div class="zoom-name-center">${cardData.name}</div>
             <div class="zoom-top-right-group">
                 <div class="zoom-color-icon-large" style="background: ${colorCode};"></div>
-                <div class="zoom-hp-container-row">
-                    <div class="zoom-hp-controls-inline">
-                        <button class="btn-zoom-hp-inline minus" onclick="changeHp('${cardData.id}', -10)">-</button>
-                        <button class="btn-zoom-hp-inline plus" onclick="changeHp('${cardData.id}', 10)">+</button>
-                    </div>
-                    <div class="zoom-hp-display">HP ${cardData.currentHp || cardData.hp}</div>
-                </div>
+                <div class="zoom-hp-display">HP ${cardData.currentHp || cardData.hp}</div>
             </div>
             <div class="zoom-main-content">${skillsHtml}</div>`;
     }
 
     zoomModal.style.display = 'flex';
-
-    // 背景をクリックした際に閉じる機能
     zoomModal.onclick = (e) => {
-        if (e.target === zoomModal) {
-            zoomModal.style.display = 'none';
-        }
+        if (e.target === zoomModal) zoomModal.style.display = 'none';
     };
 }
 
 /**
- * カードイベント設定
+ * カードイベント（ドラッグ・クリック開始）
  */
 function setupCardEvents(el) {
     el.onpointerdown = (e) => {
-        startX = e.clientX; startY = e.clientY; 
-        potentialZoomTarget = el;
-        
+        startX = e.clientX; startY = e.clientY; potentialZoomTarget = el;
         if (myRole === 'spectator' || el.dataset.zoneId === 'archive') return;
         
         isDragging = true; dragStarted = false; currentDragEl = el; 
         el.setPointerCapture(e.pointerId);
         el.oldZoneId = el.dataset.zoneId || "";
         
-        currentStack = (el.dataset.zoneId) ? Array.from(document.querySelectorAll('.card')).filter(c => c.dataset.zoneId === el.dataset.zoneId) : [el];
-        currentStack.sort((a,b) => (parseInt(a.style.zIndex)||0)-(parseInt(b.style.zIndex)||0));
+        // 【重要修正】ライフゾーンの場合は単体移動、それ以外はスタック（束）移動
+        if (el.dataset.zoneId === 'life-zone') {
+            currentStack = [el];
+        } else {
+            currentStack = (el.dataset.zoneId) ? Array.from(document.querySelectorAll('.card')).filter(c => c.dataset.zoneId === el.dataset.zoneId) : [el];
+        }
         
-        const rect = el.getBoundingClientRect(); 
-        offsetX = e.clientX - rect.left; 
-        offsetY = e.clientY - rect.top;
+        currentStack.sort((a,b) => (parseInt(a.style.zIndex)||0)-(parseInt(b.style.zIndex)||0));
+        const rect = el.getBoundingClientRect(); offsetX = e.clientX - rect.left; offsetY = e.clientY - rect.top;
         e.stopPropagation();
     };
 }
@@ -227,11 +208,7 @@ document.onpointermove = (e) => {
 
 document.onpointerup = (e) => {
     const dist = Math.hypot(e.clientX - startX, e.clientY - startY);
-    
-    // クリック判定によるズーム表示
-    if (potentialZoomTarget && dist < 10) {
-        openZoom(potentialZoomTarget.cardData, potentialZoomTarget);
-    }
+    if (potentialZoomTarget && dist < 10) openZoom(potentialZoomTarget.cardData, potentialZoomTarget);
     
     if (isDragging && currentDragEl && dragStarted) {
         const hRect = handDiv.getBoundingClientRect();
@@ -261,10 +238,9 @@ function repositionCards() {
 
         cards.forEach((card, index) => {
             card.style.position = 'absolute';
-            
             if (zone.id === 'life-zone') {
                 const offsetX = (rect.width - 82) / 2;
-                const offsetY = 20 + (index * 25); // ライフ同士の幅を広めに確保
+                const offsetY = 20 + (index * 25);
                 card.style.left = (rect.left - fieldRect.left + offsetX) + 'px';
                 card.style.top = (rect.top - fieldRect.top + offsetY) + 'px';
             } else {
@@ -301,18 +277,6 @@ function normalSnapStack(e) {
 }
 
 /**
- * HP変更・同期処理
- */
-function changeHp(id, delta) {
-    const el = document.getElementById(id);
-    if (el && el.cardData) {
-        el.cardData.currentHp = Math.max(0, (el.cardData.currentHp || el.cardData.hp || 0) + delta);
-        const fhp = document.getElementById(`hp-display-${id}`); if (fhp) fhp.innerText = el.cardData.currentHp;
-        socket.emit('updateHp', { id, currentHp: el.cardData.currentHp });
-    }
-}
-
-/**
  * 手札への返却
  */
 function returnToHand(el) {
@@ -325,11 +289,13 @@ function returnToHand(el) {
 }
 
 /**
- * ブルーム判定ロジック
+ * HP変更
  */
-function canBloom(dragCard, targetCard) {
-    if (!dragCard || !targetCard || dragCard.type !== 'holomen' || targetCard.type !== 'holomen') return false;
-    if (dragCard.name !== targetCard.name) return false;
-    const ranks = { 'Debut': 0, '1st': 1, '2nd': 2 };
-    return ranks[dragCard.bloom] === ranks[targetCard.bloom] + 1;
+function changeHp(id, delta) {
+    const el = document.getElementById(id);
+    if (el && el.cardData) {
+        el.cardData.currentHp = Math.max(0, (el.cardData.currentHp || el.cardData.hp || 0) + delta);
+        const fhp = document.getElementById(`hp-display-${id}`); if (fhp) fhp.innerText = el.cardData.currentHp;
+        socket.emit('updateHp', { id, currentHp: el.cardData.currentHp });
+    }
 }
