@@ -106,7 +106,7 @@ function setupCardEvents(el) {
 }
 
 /**
- * 再整列ロジック (ライフゾーンのオフセット配置を含む)
+ * 再整列ロジック (ライフゾーンの間隔を広げた修正版)
  */
 function repositionCards() {
     const zones = document.querySelectorAll('.zone');
@@ -121,18 +121,21 @@ function repositionCards() {
             card.style.position = 'absolute';
             
             if (zone.id === 'life-zone') {
-                // ライフゾーン：縦に少しずつずらして配置
-                const offsetX = (rect.width - 82) / 2; // 回転考慮
-                const offsetY = 10 + (index * 6);
+                // ライフゾーン：縦に並べる際の間隔を 6px -> 25px に拡大
+                // カードの短辺(58px)の約半分弱を露出させることで、掴みやすくします
+                const offsetX = (rect.width - 82) / 2; // 横向き(82px)の中心合わせ
+                const offsetY = 20 + (index * 25);     // 25pxずらすことで重なりを減らす
+                
                 card.style.left = (rect.left - fieldRect.left + offsetX) + 'px';
                 card.style.top = (rect.top - fieldRect.top + offsetY) + 'px';
             } else {
-                // 通常ゾーン：中央配置
+                // 通常ゾーン：中央に重ねて配置
                 const offsetX = (rect.width - 58) / 2;
                 const offsetY = (rect.height - 82) / 2;
                 card.style.left = (rect.left - fieldRect.left + offsetX) + 'px';
                 card.style.top = (rect.top - fieldRect.top + offsetY) + 'px';
             }
+            // 重なり順を維持
             card.style.zIndex = 100 + index;
         });
     });
