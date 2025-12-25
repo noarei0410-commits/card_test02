@@ -1,52 +1,148 @@
+/**
+ * サーバーからの通信イベントを処理し、対戦フィールドの状態を同期します。
+ */
+
+/**
+ * 盤面のカードを復元・生成するヘルパー関数
+ */
 function restoreCard(id, info) { 
     const el = createCardElement({ id, ...info }); 
-    el.dataset.zoneId = info.zoneId || ""; el.style.zIndex = info.zIndex || 100;
-    if (info.isFaceUp !== undefined) { el.classList.toggle('face-up', info.isFaceUp); el.classList.toggle('face-down', !info.isFaceUp); }
+    el.dataset.zoneId = info.zoneId || ""; 
+    el.style.zIndex = info.zIndex || 100;
+    
+    // 表裏・回転状態の適用
+    if (info.isFaceUp !== undefined) { 
+        el.classList.toggle('face-up', info.isFaceUp); 
+        el.classList.toggle('face-down', !info.isFaceUp); 
+    }
     if (info.isRotated !== undefined) el.classList.toggle('rotated', info.isRotated);
-    field.appendChild(el); repositionCards(); 
+    
+    // フィールドへ追加
+    field.appendChild(el); 
+    repositionCards(); 
 }
 
+// ---------------------------------------------------------
+// Socket.io イベントリスナー
+// ---------------------------------------------------------
+
+/**
+ * 初期化処理 (ルーム参加時)
+ */
 socket.on('init', (d) => {
-    myRole = d.role; field.querySelectorAll('.card').forEach(c => c.remove());
-    if (d.fieldState) for (const id in d.fieldState) restoreCard(id, d.fieldState[id]);
+    myRole = d.role; 
+    // フィールドのカードを一度リセット
+    field.querySelectorAll('.card').forEach(c => c.remove());
+    
+    // サーバー上の fieldState から現在の盤面を復元
+    if (d.fieldState) {
+        for (const id in d.fieldState) restoreCard(id, d.fieldState[id]);
+    }
+    
+    // デッキ枚数の初期同期
     if (d.deckCount) { 
         const mc = document.getElementById('mainCount'); if(mc) mc.innerText = d.deckCount.main; 
         const cc = document.getElementById('cheerCount'); if(cc) cc.innerText = d.deckCount.cheer;
     }
+    
     document.getElementById('room-info').innerText = `Room: ${socket.roomId} (${d.role})`;
 });
 
+/**
+ * ゲーム開始 (セットアップ完了時)
+ */
 socket.on('gameStarted', (d) => { 
-    field.querySelectorAll('.card').forEach(c => c.remove()); handDiv.innerHTML = ""; 
-    for (const id in d.fieldState) restoreCard(id, d.fieldState[id]); repositionCards(); 
+    // フィールドと手札を空にする
+    field.querySelectorAll('.card').forEach(c => c.remove()); 
+    handDiv.innerHTML = ""; 
+    
+    // サーバーから送られた初期配置（推し・ライフ等）を展開
+    for (const id in d.fieldState) restoreCard(id, d.fieldState[id]); 
+    repositionCards(); 
 });
 
-socket.on('receiveCard', (d) => { const el = createCardElement({ ...d, isFaceUp: true }); el.style.position = 'relative'; handDiv.appendChild(el); });
+/**
+ * カードの受信 (ドロー・デッキからのピック時)
+ */
+socket.on('receiveCard', (d) => { 
+    // 自分が引いたカードを生成（手札用なので表向き）
+    const el = createCardElement({ ...d, isFaceUp: true }); 
+    el.style.position = 'relative'; 
+    handDiv.appendChild(el); 
+    
+    // 手札内の整列を促す（CSS側で制御されているが念のため）
+    if (typeof repositionCards === 'function') repositionCards();
+});
 
+/**
+ * 他プレイヤーによるカード移動の同期
+ */
 socket.on('cardMoved', (d) => { 
-    let el = document.getElementById(d.id); if (!el) return restoreCard(d.id, d);
-    el.dataset.zoneId = d.zoneId || ""; el.style.zIndex = d.zIndex;
-    if (d.isFaceUp !== undefined) { el.classList.toggle('face-up', d.isFaceUp); el.classList.toggle('face-down', !d.isFaceUp); }
+    let el = document.getElementById(d.id); 
+    // もし手元に要素がない場合は新しく生成して配置
+    if (!el) return restoreCard(d.id, d); 
+    
+    el.dataset.zoneId = d.zoneId || ""; 
+    el.style.zIndex = d.zIndex;
+    
+    // 状態（向き・HP）の更新
+    if (d.isFaceUp !== undefined) { 
+        el.classList.toggle('face-up', d.isFaceUp); 
+        el.classList.toggle('face-down', !info.isFaceUp); 
+    }
     if (d.isRotated !== undefined) el.classList.toggle('rotated', d.isRotated);
-    if (d.currentHp !== undefined) { el.cardData.currentHp = d.currentHp; const fhp = document.getElementById(`hp-display-${d.id}`); if (fhp) fhp.innerText = d.currentHp; }
-    if (el.parentElement !== field) field.appendChild(el); repositionCards();
+    
+    if (d.currentHp !== undefined) { 
+        el.cardData.currentHp = d.currentHp; 
+        const fhp = document.getElementById(`hp-display-${d.id}`); 
+        if (fhp) fhp.innerText = d.currentHp; 
+    }
+    
+    // ゾーンが変更されていたらDOMの親要素をフィールドへ移動
+    if (el.parentElement !== field) field.appendChild(el); 
+    repositionCards(); 
 });
 
-socket.on('hpUpdated', (d) => { const el = document.getElementById(d.id); if (el && el.cardData) { el.cardData.currentHp = d.currentHp; const fhp = document.getElementById(`hp-display-${d.id}`); if (fhp) fhp.innerText = d.currentHp; } });
-socket.on('cardRemoved', (d) => { const el = document.getElementById(d.id); if (el) el.remove(); });
+/**
+ * HP変更の同期
+ */
+socket.on('hpUpdated', (d) => { 
+    const el = document.getElementById(d.id); 
+    if (el && el.cardData) { 
+        el.cardData.currentHp = d.currentHp; 
+        const fhp = document.getElementById(`hp-display-${d.id}`); 
+        if (fhp) fhp.innerText = d.currentHp; 
+    } 
+});
+
+/**
+ * カードが手札に戻った、または削除された時の同期
+ */
+socket.on('cardRemoved', (d) => { 
+    const el = document.getElementById(d.id); 
+    if (el) el.remove(); 
+});
+
+/**
+ * 山札・エールデッキの残り枚数同期
+ */
 socket.on('deckCount', (c) => { 
     const mc = document.getElementById('mainCount'); if(mc) mc.innerText = c.main; 
     const cc = document.getElementById('cheerCount'); if(cc) cc.innerText = c.cheer;
 });
 
 /**
- * ロビー画面のルームリスト更新 (新デザイン対応)
+ * ロビー画面のルームリスト更新 (安定版維持)
  */
 socket.on('roomListUpdate', (list) => {
-    const listEl = document.getElementById('roomList'); if (!listEl) return;
+    const listEl = document.getElementById('roomList'); 
+    if (!listEl) return;
+    
     listEl.innerHTML = list.length === 0 ? '<p style="font-size:12px; color:#666; margin-top:20px;">現在稼働中のルームはありません</p>' : "";
+    
     list.forEach(room => {
-        const item = document.createElement('div'); item.className = 'room-item';
+        const item = document.createElement('div'); 
+        item.className = 'room-item';
         item.innerHTML = `
             <span style="font-weight:bold; color:#00d2ff;"># ${room.id}</span>
             <div style="font-size:11px; color:#aaa; display:flex; gap:10px;">
@@ -59,17 +155,34 @@ socket.on('roomListUpdate', (list) => {
     });
 });
 
+// ---------------------------------------------------------
+// アーカイブ・デッキ確認操作
+// ---------------------------------------------------------
+
+/**
+ * アーカイブ（トラッシュ）の内容を表示
+ */
 function openArchive() {
-    deckGrid.innerHTML = ""; const isSpec = (myRole === 'spectator');
+    deckGrid.innerHTML = ""; 
+    const isSpec = (myRole === 'spectator');
     document.getElementById('inspection-title').innerText = "ARCHIVE";
+    
+    // フィールド上のアーカイブゾーンに所属するカードを抽出
     const cards = Array.from(document.querySelectorAll('#field > .card')).filter(c => c.dataset.zoneId === 'archive');
+    
     cards.forEach(card => {
-        const container = document.createElement('div'); container.className = "library-item";
+        const container = document.createElement('div'); 
+        container.className = "library-item";
+        
+        // カードのクローン（プレビュー用）を生成
         const el = createCardElement({ ...card.cardData, isRotated: false, isFaceUp: true }, false);
         el.onclick = () => openZoom(card.cardData, el);
         container.appendChild(el);
+        
+        // プレイヤーであれば回収ボタンを表示
         if (!isSpec) {
-            const btn = document.createElement('button'); btn.innerText = "回収";
+            const btn = document.createElement('button'); 
+            btn.innerText = "回収";
             btn.onclick = () => { returnToHand(card); deckModal.style.display = 'none'; };
             container.appendChild(btn);
         }
@@ -77,4 +190,10 @@ function openArchive() {
     });
     deckModal.style.display = 'flex';
 }
-function closeDeckInspection() { deckModal.style.display = 'none'; }
+
+/**
+ * デッキ・アーカイブ確認モーダルを閉じる
+ */
+function closeDeckInspection() { 
+    deckModal.style.display = 'none'; 
+}
