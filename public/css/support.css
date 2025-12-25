@@ -23,10 +23,14 @@
     z-index: 5;
 }
 
-/* --- 拡大後レイアウト：support-zoom-layout --- */
+/* --- 拡大後レイアウト：support-zoom-layout (スクロール防止版) --- */
 .support-zoom-layout {
-    display: flex; flex-direction: column; height: 100%; position: relative;
-    padding-top: 40px;
+    display: flex; 
+    flex-direction: column; 
+    height: 100%; 
+    position: relative;
+    padding-top: 35px; /* 上部ヘッダー用の余白を微調整 */
+    gap: 5px; /* 各要素間の隙間を一定に */
 }
 
 /* 左上：サポートラベルとカテゴリ */
@@ -36,42 +40,47 @@
 }
 .zoom-support-label {
     background: #bdc3c7; color: #333;
-    padding: 2px 12px; font-size: 11px; font-weight: bold; border-radius: 2px;
+    padding: 2px 10px; font-size: 10px; font-weight: bold; border-radius: 2px;
     width: fit-content;
 }
 .zoom-support-category-ribbon {
     background: #7f8c8d; color: white;
-    padding: 4px 15px; font-size: 14px; font-weight: bold;
+    padding: 3px 12px; font-size: 12px; font-weight: bold;
     clip-path: polygon(0% 0%, 85% 0%, 100% 50%, 85% 100%, 0% 100%);
     width: fit-content;
 }
 
-/* LIMITED表示（画像に基づいた赤背景白文字） */
+/* LIMITED表示：高さを圧縮 */
 .zoom-support-limited-bar {
     background: #8e0000; color: white;
-    width: 100%; padding: 4px;
-    font-size: 12px; font-weight: bold; text-align: center;
-    margin-top: 10px;
+    width: 100%; padding: 3px;
+    font-size: 11px; font-weight: bold; text-align: center;
+    margin-top: 5px;
     border-radius: 4px 4px 0 0;
 }
 
-/* カード名エリア（画像のようなグレー背景） */
+/* カード名エリア：フォントサイズと余白を縮小 */
 .zoom-support-name-box {
     background: #4a4a4a; color: white;
-    width: 100%; padding: 10px;
-    font-size: 20px; font-weight: bold; text-align: center;
-    margin-bottom: 10px;
+    width: 100%; padding: 8px;
+    font-size: 18px; font-weight: bold; text-align: center;
+    margin-bottom: 5px;
 }
 
-/* 効果テキストエリア */
+/* 効果テキストエリア：可変長に対応し、フォントを最適化 */
 .zoom-support-main-text {
-    font-size: 14px; line-height: 1.6; color: #333;
-    padding: 15px; border: 1px solid #ddd; border-radius: 0 0 4px 4px;
-    background: white; flex: 1;
+    font-size: 13px; line-height: 1.5; color: #333;
+    padding: 10px 12px; border: 1px solid #ddd; border-radius: 0 0 4px 4px;
+    background: white; 
+    flex: 1; /* 余った縦スペースを最大限活用 */
+    display: flex;
+    align-items: center; /* テキストが短い場合も中央寄りで美しく */
+    overflow: hidden; /* はみ出しを物理的に防止 */
 }
 
-/* ハッシュタグ（左下） */
+/* ハッシュタグ：レイアウト内に配置 (スクロール防止) */
 .zoom-support-tag {
-    position: absolute; bottom: -30px; left: 0;
-    font-size: 14px; color: #3498db; font-weight: bold;
+    position: relative; 
+    margin-top: 8px;
+    font-size: 13px; color: #3498db; font-weight: bold;
 }
