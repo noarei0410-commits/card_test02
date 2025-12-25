@@ -22,6 +22,21 @@ body {
     height: 100%;
 }
 
+/* --- 【重要】初期状態の表示制御 (JS読み込み時のチラつき防止) --- */
+
+/* 1. ハブ画面以外のメインコンテナを初期状態で非表示にする */
+#card-list-page,
+#ui-layer,
+#field-container,
+#hand-container {
+    display: none !important;
+}
+
+/* 2. ハブ画面だけを初期状態で表示する */
+#hub-page {
+    display: flex !important;
+}
+
 /* --- カードの基本構造 --- */
 .card {
     width: 58px;
@@ -104,6 +119,7 @@ body {
 button {
     font-family: inherit;
     transition: 0.2s;
+    cursor: pointer;
 }
 
 button:hover {
