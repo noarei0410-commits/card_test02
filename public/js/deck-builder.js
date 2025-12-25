@@ -227,8 +227,15 @@ function changeMainQuantityById(id, delta) {
 
 function submitDeck() {
     if (mainDeckList.length !== 50 || cheerDeckList.length !== 20 || !selectedOshi) return alert("デッキ構成が不完全です");
-    socket.emit('setupDeck', { oshi: selectedOshi, mainDeck: mainDeckList, cheerDeck: cheerDeckList });
-    showPage(null);
+    
+    // サーバーの socket.on('setGame') にイベント名とキー名を合わせる
+    socket.emit('setGame', { 
+        oshi: selectedOshi, 
+        main: mainDeckList, 
+        cheer: cheerDeckList 
+    });
+    
+    showPage(null); // フィールドを表示
 }
 
 function setOshi(data) { selectedOshi = data; updateDeckSummary(); }
