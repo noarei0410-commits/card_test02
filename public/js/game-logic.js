@@ -67,9 +67,11 @@ function createCardElement(data, withEvents = true) {
 
 /**
  * 拡大表示 (ズーム)
+ * すべての裏向きカードを拡大不可に設定
  */
 function openZoom(cardData, cardElement = null) {
-    if (!cardData || (cardElement && cardElement.classList.contains('face-down') && cardElement.dataset.zoneId === 'life-zone')) return;
+    // 【重要】裏向きなら拡大表示を一切行わない
+    if (!cardData || (cardElement && cardElement.classList.contains('face-down'))) return;
     
     const zoomOuter = document.getElementById('zoom-outer');
     const contentInner = document.querySelector('.zoom-content-inner');
@@ -156,7 +158,6 @@ function setupCardEvents(el) {
         el.setPointerCapture(e.pointerId);
         el.oldZoneId = el.dataset.zoneId || "";
         
-        // 【重要修正】ライフゾーンの場合は単体移動、それ以外はスタック（束）移動
         if (el.dataset.zoneId === 'life-zone') {
             currentStack = [el];
         } else {
@@ -225,17 +226,15 @@ document.onpointerup = (e) => {
 };
 
 /**
- * ゾーン再整列ロジック (ライフゾーン 25px 間隔版)
+ * ゾーン再整列ロジック
  */
 function repositionCards() {
     const zones = document.querySelectorAll('.zone');
     zones.forEach(zone => {
         const cards = Array.from(document.querySelectorAll('.card')).filter(c => c.dataset.zoneId === zone.id);
         if (cards.length === 0) return;
-
         const rect = zone.getBoundingClientRect();
         const fieldRect = field.getBoundingClientRect();
-
         cards.forEach((card, index) => {
             card.style.position = 'absolute';
             if (zone.id === 'life-zone') {
