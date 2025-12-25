@@ -3,9 +3,9 @@
  */
 let currentLibraryFilter = 'all';
 let builderSearchText = ''; 
-let mainDeckList = [];     
-let cheerDeckList = [];    
-let selectedOshi = null;   
+let mainDeckList = [];      
+let cheerDeckList = [];     
+let selectedOshi = null;    
 
 let savedDecks = {}; 
 
@@ -65,6 +65,7 @@ function updateLibrary() {
 function addToDeck(data) {
     if (mainDeckList.length >= 50) return alert("メインデッキは50枚上限です");
     const sameCardCount = mainDeckList.filter(c => c.id === data.id).length;
+    // ときのそらDebut(sora-00)以外の同名カード制限
     if (data.id !== "sora-00" && sameCardCount >= 4) return alert("同じカード(ID)は4枚までです");
     mainDeckList.push({...data});
     updateDeckSummary();
@@ -83,20 +84,15 @@ function changeCheerQuantity(colorName, delta) {
     updateDeckSummary();
 }
 
-/**
- * 複数保存・上書き・読込機能
- */
 function saveCurrentDeckWithTitle() {
     const titleInput = document.getElementById('deckTitleInput');
     const title = titleInput.value.trim();
     if (!title) return alert("デッキ名を入力してください");
 
-    // 上書き確認ロジック
     if (savedDecks[title]) {
         if (!confirm(`デッキ「${title}」は既に存在します。上書きしますか？`)) return;
     }
 
-    // メイン、エール、推しのすべてを保存
     savedDecks[title] = {
         main: [...mainDeckList],
         cheer: [...cheerDeckList],
@@ -109,9 +105,6 @@ function saveCurrentDeckWithTitle() {
     alert(`デッキ「${title}」を保存しました`);
 }
 
-/**
- * 現在の構築のリセット機能
- */
 function resetDeck() {
     if (!confirm("現在の構築内容（メイン・エール・推し）をすべてリセットしますか？")) return;
     mainDeckList = [];
@@ -123,11 +116,9 @@ function resetDeck() {
 function loadDeckByTitle(title) {
     const data = savedDecks[title];
     if (!data) return;
-    
     mainDeckList = [...(data.main || [])];
     cheerDeckList = [...(data.cheer || [])];
     selectedOshi = data.oshi ? {...data.oshi} : null;
-    
     updateDeckSummary();
     alert(`デッキ「${title}」を読み込みました`);
 }
@@ -225,17 +216,18 @@ function changeMainQuantityById(id, delta) {
     updateDeckSummary();
 }
 
+/**
+ * サーバーへ対戦開始を通知
+ */
 function submitDeck() {
     if (mainDeckList.length !== 50 || cheerDeckList.length !== 20 || !selectedOshi) return alert("デッキ構成が不完全です");
-    
-    // サーバーの socket.on('setGame') にイベント名とキー名を合わせる
+    // server.js の 'setGame' に合わせる
     socket.emit('setGame', { 
         oshi: selectedOshi, 
         main: mainDeckList, 
         cheer: cheerDeckList 
     });
-    
-    showPage(null); // フィールドを表示
+    showPage(null); // フィールドへ移動
 }
 
 function setOshi(data) { selectedOshi = data; updateDeckSummary(); }
