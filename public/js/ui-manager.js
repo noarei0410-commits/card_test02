@@ -1,15 +1,15 @@
 /**
  * UIマネージャー
- * 画面遷移（ハブ / デッキ構築 / 対戦フィールド）の完全な排他制御とモーダル管理を担当します。
+ * 画面遷移（ハブ / デッキ構築 / 対戦）の完全排他制御
  */
 
 /**
  * ページ切り替え関数
- * 指定されたページ以外をすべて非表示にし、表示の重なりを物理的に排除します。
- * @param {string|null} pageId - 表示したい要素のID。nullの場合は対戦フィールドを表示します。
+ * @param {string|null} pageId - 表示したい要素のID。nullの場合は対戦フィールドを表示。
  */
 function showPage(pageId) {
-    // 実行の都度、最新のDOM要素を取得することで、動的な画面更新に対応します
+    console.log("Navigating to:", pageId || "Game Field");
+
     const pages = {
         hub: document.getElementById('hub-page'),
         builder: document.getElementById('card-list-page'),
@@ -18,40 +18,31 @@ function showPage(pageId) {
         hand: document.getElementById('hand-container')
     };
 
-    // 1. 全てのメインページコンテナを一旦「完全に非表示」にする
-    // インラインスタイルで !important を適用し、CSSファイル側の display 設定を強制的に上書きします
+    // 1. 全てのメインコンテナを一旦「物理的に非表示」にする
     Object.values(pages).forEach(el => {
         if (el) {
             el.style.setProperty('display', 'none', 'important');
         }
     });
 
-    // 2. 指定されたページのみを有効なレイアウトで表示する
+    // 2. 指定されたページのみを表示
     if (pageId === 'hub-page') {
-        // ハブ画面（ルーム選択・ロビー）を表示
-        if (pages.hub) {
-            pages.hub.style.setProperty('display', 'flex', 'important');
-        }
+        if (pages.hub) pages.hub.style.setProperty('display', 'flex', 'important');
     } 
     else if (pageId === 'card-list-page') {
-        // デッキ構築画面を表示
         if (pages.builder) {
             pages.builder.style.setProperty('display', 'flex', 'important');
-        }
-        
-        // 構築画面に切り替わった際、ライブラリの描画をリフレッシュ（deck-builder.js）
-        if (typeof updateLibrary === 'function') {
-            updateLibrary();
+            // デッキ構築画面が表示されたらライブラリを更新
+            if (typeof updateLibrary === 'function') updateLibrary();
         }
     } 
     else {
-        // 対戦フィールドを表示 (pageId が null または対戦開始時)
-        // 情報バー、盤面、手札の3つのコンテナをセットで表示
+        // 対戦フィールド（ゲーム画面）を表示
         if (pages.gameUI) pages.gameUI.style.setProperty('display', 'flex', 'important');
         if (pages.field) pages.field.style.setProperty('display', 'flex', 'important');
         if (pages.hand) pages.hand.style.setProperty('display', 'block', 'important');
 
-        // フィールド表示後、カードの物理配置を再計算（game-logic.js）
+        // カードの再配置を実行
         if (typeof repositionCards === 'function') {
             setTimeout(repositionCards, 50); 
         }
@@ -59,52 +50,54 @@ function showPage(pageId) {
 }
 
 /**
- * モーダル管理（拡大表示 / デッキ・アーカイブ確認）
+ * ルーム参加処理
+ * ハブ画面の「対戦する」「観戦する」ボタンから呼び出されます。
+ */
+function joinRoom(role) {
+    const roomIdInput = document.getElementById('roomIdInput');
+    const roomId = roomIdInput ? roomIdInput.value.trim() : "";
+
+    if (!roomId) {
+        alert("ルームIDを入力してください。");
+        return;
+    }
+
+    // socket-handler.js で初期化されている socket オブジェクトを使用
+    if (typeof socket !== 'undefined') {
+        socket.roomId = roomId;
+        socket.emit('joinRoom', { roomId, role });
+        
+        // プレイヤーとして参加ならデッキ構築へ、観戦なら直接フィールドへ
+        if (role === 'player') {
+            showPage('card-list-page');
+        } else {
+            showPage(null);
+        }
+    } else {
+        console.error("Socket is not initialized.");
+    }
+}
+
+/**
+ * モーダル管理
  */
 const zoomModal = document.getElementById('zoom-modal');
-const deckModal = document.getElementById('deck-inspection-modal');
 
-/**
- * すべてのモーダル（拡大画面や山札確認画面）を閉じます。
- */
 function closeAllModals() {
     if (zoomModal) zoomModal.style.display = 'none';
-    if (deckModal) deckModal.style.display = 'none';
 }
 
 /**
- * 山札やアーカイブの確認モーダルを開きます。
- * @param {string} title - モーダル上部に表示するタイトル
- */
-function openDeckModal(title) {
-    const titleEl = document.getElementById('inspection-title');
-    if (titleEl) titleEl.innerText = title;
-    if (deckModal) deckModal.style.display = 'flex';
-}
-
-/**
- * グローバルキーボードイベント
- */
-window.addEventListener('keydown', (e) => {
-    // Escapeキーが押されたら、現在開いているモーダルをすべて閉じます
-    if (e.key === 'Escape') {
-        closeAllModals();
-    }
-});
-
-/**
- * アプリケーションの初期化処理
+ * 初期化処理
  */
 window.addEventListener('DOMContentLoaded', () => {
-    // 起動時は必ず「ハブ画面」からスタートするように設定
+    // 起動時は必ずハブ画面のみを表示
     showPage('hub-page');
     
-    // 拡大表示モーダルの背景部分をクリックした際に閉じる設定
+    // 拡大モーダルの背景クリックで閉じる
     if (zoomModal) {
         zoomModal.onclick = (e) => {
-            if (e.target === zoomModal) {
-                zoomModal.style.display = 'none';
-            }
+            if (e.target === zoomModal) zoomModal.style.display = 'none';
         };
     }
 });
