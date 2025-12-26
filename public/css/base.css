@@ -1,155 +1,81 @@
-/* --- 全般設定 & リセット --- */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    user-select: none; /* テキスト選択を禁止して操作性を向上 */
+/* --- 全体・基本設定 --- */
+* { box-sizing: border-box; }
+body { 
+    margin: 0; overflow: hidden; background-color: #04172b; 
+    font-family: 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif; 
+    display: flex; flex-direction: column; align-items: center; 
+    height: 100vh; color: white; user-select: none; touch-action: none; 
+}
+.full-page { 
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
+    display: none; justify-content: center; align-items: center; 
+    z-index: 10000; background: #04172b; 
+}
+.modal-content { 
+    background: #04172b; border: 2px solid #00d2ff; border-radius: 20px; 
+    padding: 20px; width: 98vw; height: 96vh; display: flex; flex-direction: column; 
 }
 
-body {
-    font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
-    background-color: #04172b;
-    color: white;
-    width: 100vw;
-    height: 100vh;
-    overflow: hidden; /* 画面外へのはみ出しによるスクロールを禁止 */
+/* --- カードデザイン（拡大前） --- */
+.card { 
+    width: 58px; height: 82px; background: white; color: black; border-radius: 6px; 
+    position: absolute; z-index: 1000; font-size: 8px; display: flex; 
+    align-items: center; justify-content: center; text-align: center; 
+    border: 1px solid #999; box-shadow: 2px 2px 6px rgba(0,0,0,0.4); 
+}
+/* リスト内・手札内でのスタイルリセット */
+#hand .card, .card-grid .card, #deck-card-grid .card { 
+    position: relative !important; left: auto !important; top: auto !important; 
+    flex-shrink: 0; transform: none !important; 
 }
 
-#app {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    height: 100%;
+/* --- カード内パーツ配置（ここを修正） --- */
+
+/* 左上: Bloomランク */
+.card-bloom { position: absolute; top: 3px; left: 3px; color: #3498db; font-weight: bold; font-size: 9px; }
+
+/* 右上: エール色アイコン (位置とサイズを調整) */
+.card-color-icon { 
+    position: absolute; 
+    top: 3px; 
+    right: 3px; 
+    width: 12px; 
+    height: 12px; 
+    border-radius: 50%; 
+    border: 1px solid rgba(0,0,0,0.2);
 }
 
-/* --- 【最重要】初期状態の表示制御 (JS読み込み時のチラつき防止) --- */
-
-/**
- * 起動時にハブ画面以外が下側に突き出したり、混ざって表示されたりするのを防ぐため、
- * ハブ画面以外のメインコンテナを初期状態で強制的に非表示にします。
- */
-#card-list-page,
-#ui-layer,
-#field-container,
-#hand-container {
-    display: none !important;
-}
-
-/**
- * アプリ起動時はハブ画面（ルーム選択/構築ボタン等）のみを中央に表示します。
- */
-#hub-page {
-    display: flex !important;
-    flex-direction: column;
-    width: 100%;
-    height: 100%;
-}
-
-/* --- カードの基本構造 (2025-12-24 安定版準拠) --- */
-.card {
-    width: 58px;
-    height: 82px;
-    background: white;
-    border-radius: 4px;
-    position: relative;
-    cursor: grab;
-    transition: transform 0.1s, box-shadow 0.2s;
-    flex-shrink: 0;
-}
-
-.card:active {
-    cursor: grabbing;
-}
-
-/* 回転状態 (レスト) */
-.card.rotated {
-    transform: rotate(90deg);
-}
-
-/* --- カード内部の共通要素 (表向き時) --- */
-.card span {
-    font-size: 8px;
-    font-weight: bold;
-    color: #333;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 90%;
-    text-align: center;
-    line-height: 1.1;
-}
-
-.card-hp {
-    position: absolute;
-    top: 2px;
-    right: 3px;
-    font-size: 12px;
-    font-weight: 900;
-    color: #e74c3c;
-}
-
-.card-bloom {
-    position: absolute;
-    top: 2px;
-    left: 3px;
+/* 右側: HP表示 (アイコンの下にずらす) */
+.card-hp { 
+    position: absolute; 
+    top: 18px; /* アイコンの下へ */
+    right: 3px; 
+    color: #e74c3c; 
+    font-weight: bold; 
     font-size: 10px;
-    font-weight: bold;
-    color: #3498db;
+    text-align: right;
 }
 
-.card-color-icon {
-    position: absolute;
-    top: 15px;
-    right: 3px;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    border: 0.5px solid rgba(0,0,0,0.2);
+/* 左下: バトンタッチコスト (右下から移動) */
+.card-baton { 
+    position: absolute; 
+    bottom: 3px; 
+    left: 3px; /* 左下へ移動 */
+    display: flex; flex-direction: row; gap: 2px; 
 }
+.baton-dot { width: 4px; height: 4px; background: #95a5a6; border-radius: 50%; }
 
-.card-baton {
-    position: absolute;
-    bottom: 3px;
-    left: 3px;
-    display: flex;
-    gap: 1px;
-}
 
-.baton-dot {
-    width: 4px;
-    height: 4px;
-    background: #95a5a6;
-    border-radius: 50%;
-}
+/* 裏面・回転 */
+.face-down { background: #16213e !important; border: 1.5px solid white !important; }
+.card.rotated { transform: rotate(90deg); }
 
-/* --- 共通ボタン・UI要素 --- */
-button {
-    font-family: inherit;
-    transition: 0.2s;
-    cursor: pointer;
-}
+/* --- ズームモーダル --- */
+#zoom-modal { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); z-index: 50000; display: none; justify-content: center; align-items: center; }
+.zoom-container { background: white; color: black; width: 350px; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 12px; max-height: 92vh; overflow-y: auto; }
 
-button:hover {
-    filter: brightness(1.2);
-}
-
-button:active {
-    transform: scale(0.95);
-}
-
-/* スクロールバーのカスタマイズ (2025-12-24 安定版カラー適用) */
-::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-}
-::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-}
-::-webkit-scrollbar-thumb {
-    background: rgba(0, 210, 255, 0.3);
-    border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 210, 255, 0.5);
+/* --- カードグリッド --- */
+.card-grid { 
+    display: flex !important; flex-wrap: wrap !important; gap: 15px; padding: 20px; 
+    overflow-y: auto; flex: 1; align-content: flex-start; justify-content: flex-start;
 }
