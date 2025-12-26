@@ -1,15 +1,10 @@
 /**
  * UIマネージャー
- * 画面遷移（ハブ / デッキ構築 / 対戦）の完全排他制御
+ * 画面の切り替えと初期化を管理します。
  */
 
-/**
- * ページ切り替え関数
- * @param {string|null} pageId - 表示したい要素のID。nullの場合は対戦フィールドを表示。
- */
 function showPage(pageId) {
-    console.log("Navigating to:", pageId || "Game Field");
-
+    // 取得対象の全ページ要素
     const pages = {
         hub: document.getElementById('hub-page'),
         builder: document.getElementById('card-list-page'),
@@ -18,31 +13,28 @@ function showPage(pageId) {
         hand: document.getElementById('hand-container')
     };
 
-    // 1. 全てのメインコンテナを一旦「物理的に非表示」にする
+    // すべての要素を一旦非表示（強制上書き）
     Object.values(pages).forEach(el => {
-        if (el) {
-            el.style.setProperty('display', 'none', 'important');
-        }
+        if (el) el.style.setProperty('display', 'none', 'important');
     });
 
-    // 2. 指定されたページのみを表示
+    // 指定されたページのみを表示
     if (pageId === 'hub-page') {
         if (pages.hub) pages.hub.style.setProperty('display', 'flex', 'important');
     } 
     else if (pageId === 'card-list-page') {
         if (pages.builder) {
             pages.builder.style.setProperty('display', 'flex', 'important');
-            // デッキ構築画面が表示されたらライブラリを更新
+            // 構築/ライブラリ画面のデータを更新
             if (typeof updateLibrary === 'function') updateLibrary();
         }
     } 
     else {
-        // 対戦フィールド（ゲーム画面）を表示
+        // 対戦画面（pageIdがnull、またはそれ以外の場合）
         if (pages.gameUI) pages.gameUI.style.setProperty('display', 'flex', 'important');
         if (pages.field) pages.field.style.setProperty('display', 'flex', 'important');
         if (pages.hand) pages.hand.style.setProperty('display', 'block', 'important');
 
-        // カードの再配置を実行
         if (typeof repositionCards === 'function') {
             setTimeout(repositionCards, 50); 
         }
@@ -50,8 +42,7 @@ function showPage(pageId) {
 }
 
 /**
- * ルーム参加処理
- * ハブ画面の「対戦する」「観戦する」ボタンから呼び出されます。
+ * ルーム参加と画面遷移
  */
 function joinRoom(role) {
     const roomIdInput = document.getElementById('roomIdInput');
@@ -62,42 +53,24 @@ function joinRoom(role) {
         return;
     }
 
-    // socket-handler.js で初期化されている socket オブジェクトを使用
+    // Socket通信が確立されているか確認
     if (typeof socket !== 'undefined') {
         socket.roomId = roomId;
-        socket.emit('joinRoom', { roomId, role });
+        socket.emit('joinRoom', { roomId, role }); // ルーム参加イベント送信
         
-        // プレイヤーとして参加ならデッキ構築へ、観戦なら直接フィールドへ
+        // 遷移処理：プレイヤーなら構築画面へ、観戦ならフィールドへ
         if (role === 'player') {
-            showPage('card-list-page');
+            console.log("Moving to Deck Builder...");
+            showPage('card-list-page'); // ここで構築画面に遷移
         } else {
-            showPage(null);
+            showPage(null); // フィールドへ直接遷移
         }
     } else {
-        console.error("Socket is not initialized.");
+        console.error("Socket communication error.");
     }
 }
 
-/**
- * モーダル管理
- */
-const zoomModal = document.getElementById('zoom-modal');
-
-function closeAllModals() {
-    if (zoomModal) zoomModal.style.display = 'none';
-}
-
-/**
- * 初期化処理
- */
+// 起動時の初期化
 window.addEventListener('DOMContentLoaded', () => {
-    // 起動時は必ずハブ画面のみを表示
-    showPage('hub-page');
-    
-    // 拡大モーダルの背景クリックで閉じる
-    if (zoomModal) {
-        zoomModal.onclick = (e) => {
-            if (e.target === zoomModal) zoomModal.style.display = 'none';
-        };
-    }
+    showPage('hub-page'); // 最初は必ずハブを表示
 });
