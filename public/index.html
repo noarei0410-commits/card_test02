@@ -16,77 +16,58 @@
         <section id="hub-page">
             <h1 class="hub-title">hOCG Simulator</h1>
             
-            <div class="hub-section">
-                <h3>稼働中のルーム</h3>
-                <div id="roomList">
-                    </div>
-            </div>
-
-            <div class="hub-section">
-                <h3>ルームへ入る</h3>
-                <input type="text" id="roomIdInput" placeholder="ルームIDを入力 または リストを選択">
-                <div class="hub-button-group">
-                    <button class="btn-join" onclick="joinRoom('player')">⚔️ 対戦する</button>
-                    <button class="btn-spectate" onclick="joinRoom('spectator')">👁️ 観戦する</button>
+            <div class="hub-container">
+                <div class="hub-section">
+                    <h3>稼働中のルーム</h3>
+                    <div id="roomList">
+                        </div>
                 </div>
-            </div>
 
-            <div class="hub-section-footer">
-                <button class="btn-library" onclick="showPage('card-list-page')">🗂️ カードライブラリを確認する</button>
+                <div class="hub-section">
+                    <h3>ルームへ入る</h3>
+                    <div class="hub-input-group">
+                        <input type="text" id="roomIdInput" placeholder="ルームIDを入力 または リストを選択">
+                    </div>
+                    <div class="hub-button-group">
+                        <button class="btn-join" onclick="joinRoom('player')">⚔️ 対戦する</button>
+                        <button class="btn-spectate" onclick="joinRoom('spectator')">👁️ 観戦する</button>
+                    </div>
+                </div>
+
+                <div class="hub-section-footer">
+                    <button class="btn-library" onclick="showPage('card-list-page')">🗂️ カードライブラリを確認する</button>
+                </div>
             </div>
         </section>
 
         <section id="card-list-page">
             <div class="builder-header">
                 <button class="btn-back" onclick="showPage('hub-page')">← 戻る</button>
-                <h2>デッキ構築</h2>
+                <h2>デッキ構築 / ライブラリ</h2>
                 <button id="startGameBtn" class="btn-start" onclick="submitDeck()" disabled>対戦開始</button>
             </div>
             
             <div class="builder-main">
-                <div id="libraryList" class="library-grid"></div>
-                <div id="deckSummary" class="builder-sidebar">
+                <div id="library-container">
+                    <div id="libraryList" class="library-grid"></div>
+                </div>
+                <div id="builder-sidebar">
                     </div>
             </div>
         </section>
 
         <div id="ui-layer">
             <div id="room-info">Room: -</div>
-            <div class="ui-controls">
-                <button onclick="showPage('hub-page')">退出</button>
-            </div>
+            <button class="btn-exit" onclick="location.reload()">退出</button>
         </div>
 
         <main id="field-container">
             <div id="field">
                 <div class="field-left-area">
                     <div id="life-zone" class="zone life-zone-vertical">LIFE</div>
-                    <div id="cheer-deck-zone" class="zone deck-zone" onclick="socket.emit('drawCheerCard')">エールデッキ</div>
+                    <div id="cheer-deck-zone" class="zone deck-zone">エール</div>
                 </div>
-
-                <div class="field-center-top">
-                    <div id="collab-zone" class="zone">コラボ</div>
-                    <div id="center-zone" class="zone">センター</div>
-                    <div id="oshi-zone" class="zone">推し</div>
                 </div>
-                <div class="field-back-stage">
-                    <div class="back-slots-container">
-                        <div id="back-1" class="zone">バック1</div>
-                        <div id="back-2" class="zone">バック2</div>
-                        <div id="back-3" class="zone">バック3</div>
-                        <div id="back-4" class="zone">バック4</div>
-                        <div id="back-5" class="zone">バック5</div>
-                    </div>
-                </div>
-
-                <div class="field-right-top">
-                    <div id="holopower" class="zone">ホロパワー</div>
-                </div>
-                <div class="field-right-bottom">
-                    <div id="main-deck-zone" class="zone deck-zone" onclick="socket.emit('drawMainCard')">メインデッキ</div>
-                    <div id="archive" class="zone" onclick="openArchive()">アーカイブ</div>
-                </div>
-            </div>
         </main>
 
         <div id="hand-container">
