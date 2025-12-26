@@ -1,58 +1,97 @@
+/**
+ * UI管理・画面遷移マネージャー
+ * 各画面の切り替えやグローバルライブラリの表示制御を行います。
+ */
+let globalSearchText = ''; 
+let currentGlobalTab = 'all';
+
+/**
+ * ページ遷移処理
+ */
 function showPage(pageId) {
-    const pages = {
-        hub: document.getElementById('hub-page'),
-        library: document.getElementById('library-page'), // ライブラリ画面
-        builder: document.getElementById('builder-page'), // 構築画面
-        gameUI: document.getElementById('ui-layer'),
-        field: document.getElementById('field-container'),
-        hand: document.getElementById('hand-container')
-    };
+    document.querySelectorAll('.full-page').forEach(p => p.style.display = 'none');
+    
+    if (!pageId) return; // 対戦フィールド表示時 (null)
 
-    // すべて隠す
-    Object.values(pages).forEach(el => {
-        if (el) el.style.setProperty('display', 'none', 'important');
-    });
-
-    // 遷移先表示
-    if (pageId === 'hub-page') {
-        if (pages.hub) pages.hub.style.setProperty('display', 'flex', 'important');
-    } 
-    else if (pageId === 'library-page') {
-        if (pages.library) {
-            pages.library.style.setProperty('display', 'block', 'important');
-            renderFullLibrary(); // 閲覧専用の描画
+    const target = document.getElementById(pageId);
+    if (target) {
+        target.style.display = (pageId === 'hub-page') ? 'flex' : 'block';
+        
+        // 遷移時に表示内容を最新の状態に更新する
+        if (pageId === 'card-list-page') updateGlobalLibraryDisplay();
+        if (pageId === 'setup-modal') {
+            if (typeof updateLibrary === 'function') updateLibrary();
         }
-    }
-    else if (pageId === 'builder-page') {
-        if (pages.builder) {
-            pages.builder.style.setProperty('display', 'block', 'important');
-            updateLibrary(); // 構築用の描画
-        }
-    }
-    else {
-        // 対戦フィールド
-        if (pages.gameUI) pages.gameUI.style.setProperty('display', 'flex', 'important');
-        if (pages.field) pages.field.style.setProperty('display', 'flex', 'important');
-        if (pages.hand) pages.hand.style.setProperty('display', 'block', 'important');
-        if (typeof repositionCards === 'function') setTimeout(repositionCards, 50);
     }
 }
 
 /**
- * ルーム参加と動線の回復
+ * グローバルライブラリの検索処理
  */
-function joinRoom(role) {
-    const roomId = document.getElementById('roomIdInput').value.trim();
-    if (!roomId) return alert("ルームIDを入力してください");
+function handleGlobalSearch(val) {
+    globalSearchText = val.toLowerCase();
+    updateGlobalLibraryDisplay();
+}
 
-    if (typeof socket !== 'undefined') {
-        socket.emit('joinRoom', { roomId, role });
-        document.getElementById('display-room-id').innerText = roomId;
+/**
+ * グローバルライブラリのフィルタ切り替え
+ * * 【修正】innerText による部分一致判定を廃止し、onclick 属性内の引数文字列と
+ * 直接比較するように変更しました。これにより「ホロメン」選択時に「推しホロメン」も
+ * アクティブになってしまう問題を解消しています。
+ */
+function filterGlobalLibrary(type) {
+    currentGlobalTab = type;
+    
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        // ボタンの onclick 属性 ('filterGlobalLibrary('oshi')' 等) を取得
+        const onclickStr = btn.getAttribute('onclick') || "";
+        
+        // 引数部分 ('${type}') が含まれているか正確にチェックして active クラスを切り替える
+        btn.classList.toggle('active', onclickStr.includes(`'${type}'`));
+    });
+    
+    updateGlobalLibraryDisplay();
+}
 
-        if (role === 'player') {
-            showPage('builder-page'); // プレイヤーは構築画面へ
-        } else {
-            showPage(null); // 観戦者は直接フィールドへ
+/**
+ * グローバルライブラリの描画処理
+ */
+function updateGlobalLibraryDisplay() {
+    const grid = document.getElementById('global-card-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    
+    // データロード完了を確認
+    if (!MASTER_CARDS || MASTER_CARDS.length === 0) return;
+
+    // 推しホロメンとマスターカードを統合したリストを作成
+    const allCards = [...(OSHI_LIST || []), ...(MASTER_CARDS || [])];
+    
+    // フィルタと検索条件に合致するカードを抽出
+    const filtered = allCards.filter(c => {
+        if (!c) return false;
+        const matchesType = (currentGlobalTab === 'all' || c.type === currentGlobalTab);
+        const matchesSearch = c.name.toLowerCase().includes(globalSearchText);
+        return matchesType && matchesSearch;
+    });
+
+    filtered.forEach(data => {
+        try {
+            // game-logic.js の生成関数を使用してカードを表示
+            if (typeof createCardElement === 'function') {
+                const cardEl = createCardElement(data, true);
+                grid.appendChild(cardEl);
+            }
+        } catch (err) {
+            console.error("Global Library Render Error:", data.name, err);
         }
-    }
+    });
+}
+
+/**
+ * デッキ確認モーダルを閉じる
+ */
+function closeDeckInspection() {
+    const modal = document.getElementById('deck-inspection-modal');
+    if (modal) modal.style.display = 'none';
 }
