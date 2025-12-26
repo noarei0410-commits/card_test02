@@ -3,7 +3,7 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    user-select: none;
+    user-select: none; /* テキスト選択を禁止して操作性を向上 */
 }
 
 body {
@@ -12,7 +12,7 @@ body {
     color: white;
     width: 100vw;
     height: 100vh;
-    overflow: hidden;
+    overflow: hidden; /* 画面外へのはみ出しによるスクロールを禁止 */
 }
 
 #app {
@@ -22,9 +22,12 @@ body {
     height: 100%;
 }
 
-/* --- 【重要】初期状態の表示制御 (JS読み込み時のチラつき防止) --- */
+/* --- 【最重要】初期状態の表示制御 (JS読み込み時のチラつき防止) --- */
 
-/* 1. ハブ画面以外のメインコンテナを初期状態で非表示にする */
+/**
+ * 起動時にハブ画面以外が下側に突き出したり、混ざって表示されたりするのを防ぐため、
+ * ハブ画面以外のメインコンテナを初期状態で強制的に非表示にします。
+ */
 #card-list-page,
 #ui-layer,
 #field-container,
@@ -32,12 +35,17 @@ body {
     display: none !important;
 }
 
-/* 2. ハブ画面だけを初期状態で表示する */
+/**
+ * アプリ起動時はハブ画面（ルーム選択/構築ボタン等）のみを中央に表示します。
+ */
 #hub-page {
     display: flex !important;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
 }
 
-/* --- カードの基本構造 --- */
+/* --- カードの基本構造 (2025-12-24 安定版準拠) --- */
 .card {
     width: 58px;
     height: 82px;
@@ -58,7 +66,7 @@ body {
     transform: rotate(90deg);
 }
 
-/* --- 表向き時のカード内要素 --- */
+/* --- カード内部の共通要素 (表向き時) --- */
 .card span {
     font-size: 8px;
     font-weight: bold;
@@ -130,7 +138,7 @@ button:active {
     transform: scale(0.95);
 }
 
-/* スクロールバーのカスタマイズ */
+/* スクロールバーのカスタマイズ (2025-12-24 安定版カラー適用) */
 ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -141,4 +149,7 @@ button:active {
 ::-webkit-scrollbar-thumb {
     background: rgba(0, 210, 255, 0.3);
     border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 210, 255, 0.5);
 }
